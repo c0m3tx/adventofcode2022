@@ -4,11 +4,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     let input = std::fs::read_to_string("input.txt")?;
     let input = input.lines();
 
-    let mut elves_values = extract_elves(input)?;
-    elves_values.sort();
-    elves_values.reverse();
+    let elves_values = extract_elves(input)?;
+
     println!("Max elf value: {}", elves_values.first().unwrap());
-    println!("Sub top 3: {}", elves_values.iter().take(3).sum::<u64>());
+    println!("Sum of top 3: {}", elves_values.iter().take(3).sum::<u64>());
 
     Ok(())
 }
@@ -26,6 +25,7 @@ fn extract_elves<'a>(input: impl Iterator<Item = &'a str>) -> Result<Vec<u64>, B
     }
 
     elves.push(current);
+    elves.sort_by(|a, b| b.cmp(a));
 
     Ok(elves)
 }
@@ -45,7 +45,7 @@ mod tests {
     #[test]
     fn test_extract_multiple_elves() {
         let input = "1000\n2000\n\n3000\n4000\n5000";
-        let expected = vec![3000, 12000];
+        let expected = vec![12000, 3000];
 
         assert_eq!(extract_elves(input.lines()).unwrap(), expected);
     }
