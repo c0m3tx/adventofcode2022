@@ -1,5 +1,4 @@
 use std::collections::HashSet;
-use std::error::Error;
 
 static INPUT: &str = include_str!("../input.txt");
 
@@ -43,26 +42,22 @@ fn split_compartments(rucksack: &str) -> (&str, &str) {
     rucksack.split_at(rucksack.len() / 2)
 }
 
-fn find_common<'a>(compartments: &[&str]) -> Result<char, Box<dyn Error>> {
-    let hashsets: Vec<HashSet<char>> = compartments
-        .iter()
-        .map(|comp| comp.chars().collect())
-        .collect();
+fn find_common<'a>(input: &[&str]) -> Option<char> {
+    // transform each input in an hashset containing the chars
+    let hashsets: Vec<HashSet<char>> = input.iter().map(|comp| comp.chars().collect()).collect();
 
-    let common_elements = hashsets
+    // find which element is common between all hashsets
+    hashsets
         .into_iter()
-        .reduce(|a, b| a.intersection(&b).cloned().collect());
-
-    common_elements
+        .reduce(|a, b| a.intersection(&b).cloned().collect())
         .and_then(|hash| hash.iter().next().copied())
-        .ok_or("No element found".into())
 }
 
 fn char_priority(c: char) -> u64 {
     match c {
         'a'..='z' => c as u64 - 'a' as u64 + 1,
         'A'..='Z' => c as u64 - 'A' as u64 + 27,
-        _ => panic!("Should never happen"),
+        _ => panic!("Invalid input"),
     }
 }
 
