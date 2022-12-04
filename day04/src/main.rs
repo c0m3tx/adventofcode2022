@@ -51,32 +51,49 @@ fn part_2(input: &str) -> usize {
 #[cfg(test)]
 mod tests {
     use super::*;
-
     const TEST_INPUT: &str = "2-4,6-8\n2-3,4-5\n5-7,7-9\n2-8,3-7\n6-6,4-6\n2-6,4-8";
+
+    macro_rules! assert_that {
+        ($a_1:literal-$a_2:literal is superset of $b_1:literal-$b_2:literal) => {
+            let a = $a_1..=$a_2;
+            let b = $b_1..=$b_2;
+            assert!(superset(&a, &b))
+        };
+        ($a_1:literal-$a_2:literal is not a superset of $b_1:literal-$b_2:literal) => {
+            let a = $a_1..=$a_2;
+            let b = $b_1..=$b_2;
+            assert!(!superset(&a, &b))
+        };
+        ($a_1:literal-$a_2:literal overlaps $b_1:literal-$b_2:literal) => {
+            let a = $a_1..=$a_2;
+            let b = $b_1..=$b_2;
+            assert!(overlapping(&a, &b))
+        };
+        ($a_1:literal-$a_2:literal does not overlap $b_1:literal-$b_2:literal) => {
+            let a = $a_1..=$a_2;
+            let b = $b_1..=$b_2;
+            assert!(!overlapping(&a, &b))
+        };
+    }
+
+    #[test]
+    fn test_superset() {
+        assert_that!(1-7 is superset of 2-5);
+        assert_that!(1-4 is not a superset of 3-6);
+    }
+
+    #[test]
+    fn test_overlapping() {
+        assert_that!(5-7 overlaps 7-9);
+        assert_that!(1-3 does not overlap 5-8);
+        assert_that!(2-3 overlaps 1-4);
+    }
 
     #[test]
     fn test_parse_input() {
         let result = parse_input(TEST_INPUT);
         assert_eq!(result[0], (2..=4, 6..=8));
         assert_eq!(result[3], (2..=8, 3..=7));
-    }
-
-    #[test]
-    fn test_superset() {
-        let range_1 = 1..=7;
-        let range_2 = 2..=5;
-        assert!(superset(&range_1, &range_2));
-    }
-
-    fn overlap(a: RangeInclusive<u64>, b: RangeInclusive<u64>) -> bool {
-        overlapping(&a, &b)
-    }
-
-    #[test]
-    fn test_overlapping() {
-        assert!(overlap(5..=7, 7..=9));
-        assert!(!overlap(1..=3, 5..=8));
-        assert!(overlap(2..=3, 1..=4));
     }
 
     #[test]
