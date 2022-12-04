@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-static INPUT: &str = include_str!("../input.txt");
+const INPUT: &str = include_str!("../input.txt");
 
 fn part_1() {
     let result = INPUT
