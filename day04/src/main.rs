@@ -3,7 +3,11 @@ use std::ops::RangeInclusive;
 const INPUT: &str = include_str!("../input.txt");
 
 fn overlapping(first: &RangeInclusive<u64>, second: &RangeInclusive<u64>) -> bool {
-    first.clone().any(|v| second.contains(&v))
+    if first.start() <= second.start() {
+        first.end() >= second.start()
+    } else {
+        second.end() >= first.start()
+    }
 }
 
 fn superset(first: &RangeInclusive<u64>, second: &RangeInclusive<u64>) -> bool {
@@ -64,11 +68,15 @@ mod tests {
         assert!(superset(&range_1, &range_2));
     }
 
+    fn overlap(a: RangeInclusive<u64>, b: RangeInclusive<u64>) -> bool {
+        overlapping(&a, &b)
+    }
+
     #[test]
     fn test_overlapping() {
-        let range_1 = 5..=7;
-        let range_2 = 7..=9;
-        assert!(overlapping(&range_1, &range_2))
+        assert!(overlap(5..=7, 7..=9));
+        assert!(!overlap(1..=3, 5..=8));
+        assert!(overlap(2..=3, 1..=4));
     }
 
     #[test]
