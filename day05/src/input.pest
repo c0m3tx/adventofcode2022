@@ -1,0 +1,10 @@
+number = { ASCII_DIGIT+ }
+moveCommand = { "move " ~ number ~ " from " ~ number ~ " to " ~ number }
+
+boxLetter = { ('A'..'Z') }
+
+emptyInitialStatusBlock = { "   " }
+initialStatusBlock = _{ "[" ~ boxLetter ~ "]" | emptyInitialStatusBlock }
+initialStatus = { initialStatusBlock ~ (" " ~ initialStatusBlock)* }
+
+row = _{ initialStatus | moveCommand }
