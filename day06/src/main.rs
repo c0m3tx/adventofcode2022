@@ -16,15 +16,14 @@ fn main() {
 
 fn find_marker(input: &str, length: usize) -> Option<usize> {
     input
-        .chars()
-        .collect::<Vec<char>>()
+        .as_bytes()
         .windows(length)
         .enumerate()
         .find_map(|(i, window)| all_different(window).then_some(i + length))
 }
 
-fn all_different(chars: &[char]) -> bool {
-    chars.iter().cloned().collect::<HashSet<char>>().len() == chars.len()
+fn all_different(chars: &[u8]) -> bool {
+    chars.iter().cloned().collect::<HashSet<u8>>().len() == chars.len()
 }
 
 // so... this is just for fun, I'm not even sure it's actually more efficient
