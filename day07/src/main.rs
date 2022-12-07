@@ -56,10 +56,9 @@ impl Terminal {
     }
 
     fn analyse_folder_sizes(&self) -> HashMap<String, usize> {
-        let mut folder_sizes: HashMap<String, usize> = HashMap::new();
-
-        for folder in self.folders.keys() {
+        self.folders.keys().fold(HashMap::new(), |mut map, folder| {
             let inner_folders = self.folders.keys().filter(|x| x.starts_with(folder));
+
             let size = inner_folders
                 .map(|fold| {
                     self.folders
@@ -69,10 +68,9 @@ impl Terminal {
                 })
                 .sum();
 
-            folder_sizes.insert(folder.clone(), size);
-        }
-
-        folder_sizes
+            map.insert(folder.clone(), size);
+            map
+        })
     }
 }
 
@@ -110,22 +108,19 @@ fn parse_input(input: &str) -> Terminal {
 }
 
 fn part_1(input: &str) -> usize {
-    let terminal = parse_input(input);
-    let folder_sizes = terminal.analyse_folder_sizes();
-
-    folder_sizes
+    parse_input(input)
+        .analyse_folder_sizes()
         .into_iter()
-        .filter(|(_, size)| *size <= 100000)
-        .map(|(_, size)| size)
+        .filter_map(|(_, size)| (size <= 100000).then_some(size))
         .sum()
 }
 
 fn part_2(input: &str) -> usize {
-    let terminal = parse_input(input);
-    let folder_sizes = terminal.analyse_folder_sizes();
+    let folder_sizes = parse_input(input).analyse_folder_sizes();
 
-    let current_free_memory = TOTAL_SIZE - folder_sizes.get("/").expect("No root drive").clone();
-    let needed_space = MIN_SIZE_FOR_UPDATE - current_free_memory;
+    let needed_space =
+        MIN_SIZE_FOR_UPDATE - (TOTAL_SIZE - folder_sizes.get("/").expect("No root drive").clone());
+
     let mut folder_sizes: Vec<usize> = folder_sizes.values().cloned().collect();
     folder_sizes.sort_unstable();
 
