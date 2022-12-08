@@ -26,6 +26,25 @@ impl Tree {
     }
 }
 
+impl From<&str> for TreeMap {
+    fn from(input: &str) -> TreeMap {
+        let trees: Vec<Vec<Tree>> = input
+            .lines()
+            .map(|line| {
+                line.chars()
+                    .map(|c| c as isize - '0' as isize)
+                    .map(Tree::new)
+                    .collect()
+            })
+            .collect();
+
+        let rows = trees.len();
+        let cols = trees[0].len();
+
+        TreeMap { trees, rows, cols }
+    }
+}
+
 impl TreeMap {
     fn print_visibility(&self) {
         let output = self
@@ -72,27 +91,9 @@ impl TreeMap {
         ((row + 1)..self.rows).map(move |row| self.at(row, col))
     }
 
-    fn parse(input: &str) -> TreeMap {
-        let trees: Vec<Vec<Tree>> = input
-            .lines()
-            .map(|line| {
-                line.chars()
-                    .map(|c| c as isize - '0' as isize)
-                    .map(Tree::new)
-                    .collect()
-            })
-            .collect();
-
-        let rows = trees.len();
-        let cols = trees[0].len();
-
-        TreeMap { trees, rows, cols }
-    }
-
     fn is_tree_visible(&mut self, row: usize, col: usize) -> bool {
         let this_tree = self.at(row, col);
         let lower = |t: &Tree| t.height < this_tree.height;
-        // let higher = |t: &Tree| t.height >= this_tree.height;
 
         self.up_from(row, col).all(lower)
             || self.down_from(row, col).all(lower)
@@ -166,7 +167,7 @@ fn part_2(treemap: &mut TreeMap) -> usize {
 }
 
 fn main() {
-    let mut treemap = TreeMap::parse(INPUT);
+    let mut treemap = INPUT.into();
     println!("Part 1: {}", part_1(&mut treemap));
     println!("Part 2: {}", part_2(&mut treemap));
 }
@@ -183,39 +184,39 @@ mod tests {
 
     #[test]
     fn test_visible_tree() {
-        let mut map = TreeMap::parse(TEST_INPUT);
-        assert_eq!(map.is_tree_visible(2, 1), true)
+        let mut treemap: TreeMap = TEST_INPUT.into();
+        assert_eq!(treemap.is_tree_visible(2, 1), true)
     }
 
     #[test]
     fn test_calculate_visibility() {
-        let mut map = TreeMap::parse(TEST_INPUT);
-        map.calculate_visibility();
+        let mut treemap: TreeMap = TEST_INPUT.into();
+        treemap.calculate_visibility();
 
-        assert_eq!(map.at(0, 0).visible, true);
-        assert_eq!(map.at(1, 1).visible, true);
-        assert_eq!(map.at(1, 3).visible, false);
+        assert_eq!(treemap.at(0, 0).visible, true);
+        assert_eq!(treemap.at(1, 1).visible, true);
+        assert_eq!(treemap.at(1, 3).visible, false);
     }
 
     #[test]
     fn test_part_1() {
-        let mut treemap = TreeMap::parse(TEST_INPUT);
+        let mut treemap = TEST_INPUT.into();
         let visibles = part_1(&mut treemap);
         assert_eq!(visibles, 21);
     }
 
     #[test]
     fn test_calculate_scenic_score() {
-        let mut map = TreeMap::parse(TEST_INPUT);
-        map.calculate_visibility();
+        let mut treemap: TreeMap = TEST_INPUT.into();
+        treemap.calculate_visibility();
 
-        let scenic_score = map.calculate_scenic_score_for_tree(3, 2);
+        let scenic_score = treemap.calculate_scenic_score_for_tree(3, 2);
         assert_eq!(scenic_score, 8)
     }
 
     #[test]
     fn test_part_2() {
-        let mut treemap = TreeMap::parse(TEST_INPUT);
+        let mut treemap: TreeMap = TEST_INPUT.into();
         treemap.calculate_visibility();
         let max_scenic_score = part_2(&mut treemap);
         assert_eq!(max_scenic_score, 8);
@@ -223,14 +224,14 @@ mod tests {
 
     #[test]
     fn test_full_part_1() {
-        let mut treemap = TreeMap::parse(INPUT);
+        let mut treemap = INPUT.into();
         let visibles = part_1(&mut treemap);
         assert_eq!(visibles, 1787);
     }
 
     #[test]
     fn test_full_part_2() {
-        let mut treemap = TreeMap::parse(INPUT);
+        let mut treemap: TreeMap = INPUT.into();
         treemap.calculate_visibility();
         let max_scenic_score = part_2(&mut treemap);
         assert_eq!(max_scenic_score, 440640);
