@@ -35,18 +35,6 @@ impl TreeMap {
         &mut self.trees[row][col]
     }
 
-    fn print_visibility(&self) -> String {
-        self.trees
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|tree| if tree.visible { 'T' } else { 'F' })
-                    .collect::<String>()
-            })
-            .collect::<Vec<_>>()
-            .join("\n")
-    }
-
     fn parse(input: &str) -> TreeMap {
         let trees: Vec<Vec<Tree>> = input
             .lines()
@@ -64,44 +52,30 @@ impl TreeMap {
         TreeMap { trees, rows, cols }
     }
 
+    fn calculate_tree_visible(&mut self, row: usize, col: usize) {
+        let this_tree = self.at(row, col);
+        let row_mapper = |row: usize| self.at(row, col);
+        let col_mapper = |col: usize| self.at(row, col);
+        let all_trees_are_lower = |t: &Tree| t.height < this_tree.height;
+
+        let visible = (0..row).map(row_mapper).all(all_trees_are_lower)
+            || (row + 1..self.rows)
+                .map(row_mapper)
+                .all(all_trees_are_lower)
+            || (0..col).map(col_mapper).all(all_trees_are_lower)
+            || (col + 1..self.cols)
+                .map(col_mapper)
+                .all(all_trees_are_lower);
+
+        if visible {
+            self.mut_at(row, col).visible = true;
+        }
+    }
+
     fn calculate_visibility(&mut self) {
         for row in 0..self.rows {
-            let mut highest = -1;
             for col in 0..self.cols {
-                let tree = self.mut_at(row, col);
-                if tree.height > highest {
-                    tree.visible = true;
-                    highest = tree.height;
-                }
-            }
-
-            highest = -1;
-            for col in (0..self.cols).rev() {
-                let tree = self.mut_at(row, col);
-                if tree.height > highest {
-                    tree.visible = true;
-                    highest = tree.height;
-                }
-            }
-        }
-
-        for col in 0..self.cols {
-            let mut highest = -1;
-            for row in 0..self.rows {
-                let tree = self.mut_at(row, col);
-                if tree.height > highest {
-                    tree.visible = true;
-                    highest = tree.height;
-                }
-            }
-
-            highest = -1;
-            for row in (0..self.rows).rev() {
-                let tree = self.mut_at(row, col);
-                if tree.height > highest {
-                    tree.visible = true;
-                    highest = tree.height;
-                }
+                self.calculate_tree_visible(row, col)
             }
         }
     }
