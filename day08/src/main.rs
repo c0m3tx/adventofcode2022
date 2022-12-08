@@ -27,12 +27,49 @@ impl Tree {
 }
 
 impl TreeMap {
+    fn print_visibility(&self) {
+        let output = self
+            .trees
+            .iter()
+            .map(|row| {
+                row.iter()
+                    .map(|tree| if tree.visible { 'T' } else { 'F' })
+                    .collect::<String>()
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+
+        println!("{}", output);
+    }
+
     fn at(&self, row: usize, col: usize) -> &Tree {
         &self.trees[row][col]
     }
 
     fn mut_at(&mut self, row: usize, col: usize) -> &mut Tree {
         &mut self.trees[row][col]
+    }
+
+    fn all_coords(&self) -> impl Iterator<Item = (usize, usize)> {
+        let rows = self.rows.clone();
+        let cols = self.cols.clone();
+        (0..rows).flat_map(move |row| (0..cols).map(move |col| (row, col)))
+    }
+
+    fn right_from(&self, row: usize, col: usize) -> impl Iterator<Item = &Tree> {
+        ((col + 1)..self.cols).map(move |col| self.at(row, col))
+    }
+
+    fn left_from(&self, row: usize, col: usize) -> impl Iterator<Item = &Tree> {
+        (0..col).rev().map(move |col| self.at(row, col))
+    }
+
+    fn up_from(&self, row: usize, col: usize) -> impl Iterator<Item = &Tree> {
+        (0..row).rev().map(move |row| self.at(row, col))
+    }
+
+    fn down_from(&self, row: usize, col: usize) -> impl Iterator<Item = &Tree> {
+        ((row + 1)..self.rows).map(move |row| self.at(row, col))
     }
 
     fn parse(input: &str) -> TreeMap {
@@ -52,40 +89,26 @@ impl TreeMap {
         TreeMap { trees, rows, cols }
     }
 
-    fn calculate_tree_visible(&mut self, row: usize, col: usize) {
+    fn is_tree_visible(&mut self, row: usize, col: usize) -> bool {
         let this_tree = self.at(row, col);
-        let row_mapper = |row: usize| self.at(row, col);
-        let col_mapper = |col: usize| self.at(row, col);
-        let all_trees_are_lower = |t: &Tree| t.height < this_tree.height;
+        let lower = |t: &Tree| t.height < this_tree.height;
+        // let higher = |t: &Tree| t.height >= this_tree.height;
 
-        let visible = (0..row).map(row_mapper).all(all_trees_are_lower)
-            || (row + 1..self.rows)
-                .map(row_mapper)
-                .all(all_trees_are_lower)
-            || (0..col).map(col_mapper).all(all_trees_are_lower)
-            || (col + 1..self.cols)
-                .map(col_mapper)
-                .all(all_trees_are_lower);
-
-        if visible {
-            self.mut_at(row, col).visible = true;
-        }
+        self.up_from(row, col).all(lower)
+            || self.down_from(row, col).all(lower)
+            || self.right_from(row, col).all(lower)
+            || self.left_from(row, col).all(lower)
     }
 
     fn calculate_visibility(&mut self) {
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                self.calculate_tree_visible(row, col)
-            }
+        for (row, col) in self.all_coords() {
+            self.mut_at(row, col).visible = self.is_tree_visible(row, col)
         }
     }
 
     fn calculate_scenic_scores(&mut self) {
-        for row in 0..self.rows {
-            for col in 0..self.cols {
-                let score = self.calculate_scenic_score_for_tree(row, col);
-                self.mut_at(row, col).scenic_score = score;
-            }
+        for (row, col) in self.all_coords() {
+            self.mut_at(row, col).scenic_score = self.calculate_scenic_score_for_tree(row, col);
         }
     }
 
@@ -108,17 +131,10 @@ impl TreeMap {
     fn calculate_scenic_score_for_tree(&mut self, row: usize, col: usize) -> usize {
         let this_height = self.at(row, col).height as usize;
 
-        let going_up = (0..row).rev().map(|row| self.at(row, col));
-        let going_up = Self::scenic_score_for_tree_line(this_height, going_up);
-
-        let going_down = ((row + 1)..self.rows).map(|row| self.at(row, col));
-        let going_down = Self::scenic_score_for_tree_line(this_height, going_down);
-
-        let going_left = (0..col).rev().map(|c| self.at(row, c));
-        let going_left = Self::scenic_score_for_tree_line(this_height, going_left);
-
-        let going_right = ((col + 1)..self.cols).map(|c| self.at(row, c));
-        let going_right = Self::scenic_score_for_tree_line(this_height, going_right);
+        let going_up = Self::scenic_score_for_tree_line(this_height, self.up_from(row, col));
+        let going_down = Self::scenic_score_for_tree_line(this_height, self.down_from(row, col));
+        let going_left = Self::scenic_score_for_tree_line(this_height, self.left_from(row, col));
+        let going_right = Self::scenic_score_for_tree_line(this_height, self.right_from(row, col));
 
         going_up * going_down * going_left * going_right
     }
@@ -166,6 +182,12 @@ mod tests {
 35390"#;
 
     #[test]
+    fn test_visible_tree() {
+        let mut map = TreeMap::parse(TEST_INPUT);
+        assert_eq!(map.is_tree_visible(2, 1), true)
+    }
+
+    #[test]
     fn test_calculate_visibility() {
         let mut map = TreeMap::parse(TEST_INPUT);
         map.calculate_visibility();
@@ -193,9 +215,24 @@ mod tests {
 
     #[test]
     fn test_part_2() {
-        let mut map = TreeMap::parse(TEST_INPUT);
-        map.calculate_visibility();
-        let max_scenic_score = part_2(&mut map);
+        let mut treemap = TreeMap::parse(TEST_INPUT);
+        treemap.calculate_visibility();
+        let max_scenic_score = part_2(&mut treemap);
         assert_eq!(max_scenic_score, 8);
+    }
+
+    #[test]
+    fn test_full_part_1() {
+        let mut treemap = TreeMap::parse(INPUT);
+        let visibles = part_1(&mut treemap);
+        assert_eq!(visibles, 1787);
+    }
+
+    #[test]
+    fn test_full_part_2() {
+        let mut treemap = TreeMap::parse(INPUT);
+        treemap.calculate_visibility();
+        let max_scenic_score = part_2(&mut treemap);
+        assert_eq!(max_scenic_score, 440640);
     }
 }
