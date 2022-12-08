@@ -68,7 +68,7 @@ impl TreeMap {
         for row in 0..self.rows {
             let mut highest = -1;
             for col in 0..self.cols {
-                let tree = &mut self.trees[row][col];
+                let tree = self.mut_at(row, col);
                 if tree.height > highest {
                     tree.visible = true;
                     highest = tree.height;
@@ -77,7 +77,7 @@ impl TreeMap {
 
             highest = -1;
             for col in (0..self.cols).rev() {
-                let tree = &mut self.trees[row][col];
+                let tree = self.mut_at(row, col);
                 if tree.height > highest {
                     tree.visible = true;
                     highest = tree.height;
@@ -88,7 +88,7 @@ impl TreeMap {
         for col in 0..self.cols {
             let mut highest = -1;
             for row in 0..self.rows {
-                let tree = &mut self.trees[row][col];
+                let tree = self.mut_at(row, col);
                 if tree.height > highest {
                     tree.visible = true;
                     highest = tree.height;
@@ -97,7 +97,7 @@ impl TreeMap {
 
             highest = -1;
             for row in (0..self.rows).rev() {
-                let tree = &mut self.trees[row][col];
+                let tree = self.mut_at(row, col);
                 if tree.height > highest {
                     tree.visible = true;
                     highest = tree.height;
@@ -110,7 +110,6 @@ impl TreeMap {
         for row in 0..self.rows {
             for col in 0..self.cols {
                 let score = self.calculate_scenic_score_for_tree(row, col);
-                println!("For row {}, column {}, score is {}", row, col, score);
                 self.mut_at(row, col).scenic_score = score;
             }
         }
@@ -151,15 +150,17 @@ impl TreeMap {
     }
 
     fn find_highest_scenic_score(&self) -> usize {
-        (0..(self.rows))
-            .flat_map(|row| self.trees[row].iter().map(|t| t.scenic_score))
+        self.trees
+            .iter()
+            .flat_map(|row| row.iter().map(|t| t.scenic_score))
             .max()
             .unwrap()
     }
 
     fn count_visibles(&self) -> usize {
-        (0..(self.rows))
-            .flat_map(|row| self.trees[row].iter().filter(|t| t.visible))
+        self.trees
+            .iter()
+            .flat_map(|row| row.iter().filter(|t| t.visible))
             .count()
     }
 }
@@ -195,11 +196,9 @@ mod tests {
         let mut map = TreeMap::parse(TEST_INPUT);
         map.calculate_visibility();
 
-        println!("{}", map.print_visibility());
-
-        assert_eq!(map.trees[0][0].visible, true);
-        assert_eq!(map.trees[1][1].visible, true);
-        assert_eq!(map.trees[1][3].visible, false);
+        assert_eq!(map.at(0, 0).visible, true);
+        assert_eq!(map.at(1, 1).visible, true);
+        assert_eq!(map.at(1, 3).visible, false);
     }
 
     #[test]
@@ -213,8 +212,6 @@ mod tests {
     fn test_calculate_scenic_score() {
         let mut map = TreeMap::parse(TEST_INPUT);
         map.calculate_visibility();
-
-        println!("{}", map.print_visibility());
 
         let scenic_score = map.calculate_scenic_score_for_tree(3, 2);
         assert_eq!(scenic_score, 8)
