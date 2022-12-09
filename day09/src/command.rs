@@ -4,10 +4,6 @@ pub enum Direction {
     Down,
     Left,
     Right,
-    UpRight,
-    UpLeft,
-    DownRight,
-    DownLeft,
 }
 
 impl From<&str> for Direction {

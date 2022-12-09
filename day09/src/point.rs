@@ -16,22 +16,6 @@ impl Point {
             Direction::Down => self.1 += 1,
             Direction::Left => self.0 -= 1,
             Direction::Right => self.0 += 1,
-            Direction::UpLeft => {
-                self.0 -= 1;
-                self.1 -= 1
-            }
-            Direction::UpRight => {
-                self.0 += 1;
-                self.1 -= 1
-            }
-            Direction::DownLeft => {
-                self.0 += 1;
-                self.1 -= 1
-            }
-            Direction::DownRight => {
-                self.0 += 1;
-                self.1 += 1
-            }
         }
     }
 
