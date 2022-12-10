@@ -61,14 +61,13 @@ fn part_1(input: &str) -> isize {
     let mut cpu = Cpu::new();
     cpu.execute(input);
 
-    let mut total = 0;
-
-    for n in [20, 60, 100, 140, 180, 220] {
-        let nth_value = cpu.cycles_history.iter().nth(n - 1).unwrap();
-        total += *nth_value * (n as isize);
-    }
-
-    total
+    cpu.cycles_history
+        .iter()
+        .enumerate()
+        .skip(19)
+        .step_by(40)
+        .map(|(step, value)| value * ((step + 1) as isize))
+        .sum()
 }
 
 fn part_2(input: &str) -> String {
