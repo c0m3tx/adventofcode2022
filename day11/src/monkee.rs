@@ -39,27 +39,19 @@ impl TryFrom<&[&str]> for Monkee {
     type Error = Box<dyn Error>;
     fn try_from(data: &[&str]) -> Result<Self, Self::Error> {
         let items: Vec<isize> = data[1]
-            .split_once(": ")
-            .ok_or("Invalid data")?
-            .1
+            .trim_start_matches("  Starting items: ")
             .split(", ")
             .map(|item| item.parse().unwrap())
             .collect();
         let operation: Operation = data[2].split_once("new = ").unwrap().1.into();
         let test: isize = data[3]
-            .split_once("divisible by ")
-            .ok_or("Invalid data")?
-            .1
+            .trim_start_matches("  Test: divisible by ")
             .parse()?;
         let if_true = data[4]
-            .split_once("to monkey ")
-            .ok_or("Invalid data")?
-            .1
+            .trim_start_matches("    If true: throw to monkey ")
             .parse()?;
         let if_false = data[5]
-            .split_once("to monkey ")
-            .ok_or("Invalid data")?
-            .1
+            .trim_start_matches("    If false: throw to monkey ")
             .parse()?;
         Ok(Monkee {
             items,
