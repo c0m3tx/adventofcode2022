@@ -38,12 +38,12 @@ where
 impl TryFrom<&[&str]> for Monkee {
     type Error = Box<dyn Error>;
     fn try_from(data: &[&str]) -> Result<Self, Self::Error> {
-        let items: Vec<isize> = data[1]
+        let items = data[1]
             .trim_start_matches("  Starting items: ")
             .split(", ")
-            .map(|item| item.parse().unwrap())
-            .collect();
-        let operation: Operation = data[2].split_once("new = ").unwrap().1.into();
+            .map(|item| item.parse().map_err(|_| "Invalid number"))
+            .collect::<Result<_, _>>()?;
+        let operation: Operation = data[2].trim_start_matches("  Operation: new = ").into();
         let test: isize = data[3]
             .trim_start_matches("  Test: divisible by ")
             .parse()?;
