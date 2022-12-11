@@ -15,38 +15,15 @@ where
     F: Fn(isize) -> isize,
 {
     for i in 0..monkees.len() {
-        // println!("Monkey {i}:");
         let current_monkee = &mut monkees[i];
         let mut swaps: Vec<(usize, isize)> = Vec::new();
         current_monkee.items.iter().for_each(|item| {
-            // println!("  Monkey inspects an item with a worry level of {}", item);
             current_monkee.inspected_items += 1;
             let new_value = current_monkee.operation.apply(*item);
-            // println!("    Worry level is changed to {}.", new_value);
             let new_value = worry_decrease_fn(new_value);
-            // println!(
-            //     "    Monkey gets bored with item. Worry level is divided by 3 to {}.",
-            //     new_value
-            // );
             if new_value % current_monkee.test == 0 {
-                // println!(
-                //     "    Current worry level is divisible by {}.",
-                //     current_monkee.test
-                // );
-                // println!(
-                //     "    Item with worry level {} is thrown at monkey {}",
-                //     new_value, current_monkee.if_true
-                // );
                 swaps.push((current_monkee.if_true, new_value));
             } else {
-                // println!(
-                //     "    Current worry level is not divisible by {}.",
-                //     current_monkee.test
-                // );
-                // println!(
-                //     "    Item with worry level {} is thrown at monkey {}",
-                //     new_value, current_monkee.if_false
-                // );
                 swaps.push((current_monkee.if_false, new_value));
             }
         });
@@ -139,5 +116,10 @@ mod tests {
         assert_eq!(monkeys[1].inspected_items, 4);
         assert_eq!(monkeys[2].inspected_items, 3);
         assert_eq!(monkeys[3].inspected_items, 5);
+
+        assert_eq!(monkeys[0].items.len(), 4);
+        assert_eq!(monkeys[1].items.len(), 6);
+        assert_eq!(monkeys[2].items.len(), 0);
+        assert_eq!(monkeys[3].items.len(), 0);
     }
 }
