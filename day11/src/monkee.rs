@@ -1,0 +1,143 @@
+use crate::operation::Operation;
+use std::error::Error;
+
+pub struct Monkee {
+    items: Vec<isize>,
+    operation: Operation,
+    pub test: isize,
+    if_true: usize,
+    if_false: usize,
+    pub inspected_items: usize,
+}
+
+pub fn do_a_turn<F>(monkees: &mut Vec<Monkee>, worry_decrease_fn: F)
+where
+    F: Fn(isize) -> isize,
+{
+    for i in 0..monkees.len() {
+        // println!("Monkey {i}:");
+        let current_monkee = &mut monkees[i];
+        let mut swaps: Vec<(usize, isize)> = Vec::new();
+        current_monkee.items.iter().for_each(|item| {
+            // println!("  Monkey inspects an item with a worry level of {}", item);
+            current_monkee.inspected_items += 1;
+            let new_value = current_monkee.operation.apply(*item);
+            // println!("    Worry level is changed to {}.", new_value);
+            let new_value = worry_decrease_fn(new_value);
+            // println!(
+            //     "    Monkey gets bored with item. Worry level is divided by 3 to {}.",
+            //     new_value
+            // );
+            if new_value % current_monkee.test == 0 {
+                // println!(
+                //     "    Current worry level is divisible by {}.",
+                //     current_monkee.test
+                // );
+                // println!(
+                //     "    Item with worry level {} is thrown at monkey {}",
+                //     new_value, current_monkee.if_true
+                // );
+                swaps.push((current_monkee.if_true, new_value));
+            } else {
+                // println!(
+                //     "    Current worry level is not divisible by {}.",
+                //     current_monkee.test
+                // );
+                // println!(
+                //     "    Item with worry level {} is thrown at monkey {}",
+                //     new_value, current_monkee.if_false
+                // );
+                swaps.push((current_monkee.if_false, new_value));
+            }
+        });
+
+        current_monkee.items = vec![];
+        for (monkee, value) in swaps {
+            monkees[monkee].items.push(value);
+        }
+    }
+}
+
+impl TryFrom<&[&str]> for Monkee {
+    type Error = Box<dyn Error>;
+    fn try_from(data: &[&str]) -> Result<Self, Self::Error> {
+        let items: Vec<isize> = data[1]
+            .split_once(": ")
+            .ok_or("Invalid data")?
+            .1
+            .split(", ")
+            .map(|item| item.parse().unwrap())
+            .collect();
+        let operation: Operation = data[2].split_once("new = ").unwrap().1.into();
+        let test: isize = data[3]
+            .split_once("divisible by ")
+            .ok_or("Invalid data")?
+            .1
+            .parse()?;
+        let if_true = data[4]
+            .split_once("to monkey ")
+            .ok_or("Invalid data")?
+            .1
+            .parse()?;
+        let if_false = data[5]
+            .split_once("to monkey ")
+            .ok_or("Invalid data")?
+            .1
+            .parse()?;
+        Ok(Monkee {
+            items,
+            operation,
+            test,
+            if_false,
+            if_true,
+            inspected_items: 0,
+        })
+    }
+}
+
+pub fn parse_all(input: &str) -> Result<Vec<Monkee>, Box<dyn Error>> {
+    let lines: Vec<_> = input.lines().collect();
+    lines
+        .chunks(7)
+        .map(|chunk| chunk.try_into())
+        .collect::<Result<Vec<Monkee>, Box<dyn Error>>>()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::operation::{Item, Operation};
+
+    const TEST_INPUT: &str = include_str!("../test_input.txt");
+
+    #[test]
+    fn test_parse_monkeeee() {
+        let rows: Vec<&str> = TEST_INPUT.lines().take(7).collect();
+        let monkee: Monkee = rows.as_slice().try_into().expect("Invalid data");
+        assert_eq!(monkee.items, vec![79, 98]);
+        assert_eq!(
+            monkee.operation,
+            Operation::Mult(Item::Current, Item::Constant(19))
+        );
+        assert_eq!(monkee.test, 23);
+        assert_eq!(monkee.if_true, 2);
+        assert_eq!(monkee.if_false, 3);
+    }
+
+    #[test]
+    fn test_parse_all_monkeys() {
+        let monkeys = parse_all(TEST_INPUT).unwrap();
+        assert_eq!(monkeys.len(), 4);
+    }
+
+    #[test]
+    fn test_do_a_turn() {
+        let mut monkeys = parse_all(TEST_INPUT).unwrap();
+        do_a_turn(&mut monkeys, |f| f / 3);
+
+        assert_eq!(monkeys[0].inspected_items, 2);
+        assert_eq!(monkeys[1].inspected_items, 4);
+        assert_eq!(monkeys[2].inspected_items, 3);
+        assert_eq!(monkeys[3].inspected_items, 5);
+    }
+}
