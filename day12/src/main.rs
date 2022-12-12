@@ -72,14 +72,16 @@ fn find_shortest(input: Matrix2D<Location>, (start_row, start_col): (isize, isiz
         let my_distance = me.min_distance;
         let my_height = me.height;
 
-        visit_neighbor(&mut input, (row, col - 1), my_distance, my_height)
-            .map(|c| coords_to_visit.push_back(c));
-        visit_neighbor(&mut input, (row, col + 1), my_distance, my_height)
-            .map(|c| coords_to_visit.push_back(c));
-        visit_neighbor(&mut input, (row - 1, col), my_distance, my_height)
-            .map(|c| coords_to_visit.push_back(c));
-        visit_neighbor(&mut input, (row + 1, col), my_distance, my_height)
-            .map(|c| coords_to_visit.push_back(c));
+        let neighbors = [
+            (row, col - 1),
+            (row, col + 1),
+            (row - 1, col),
+            (row + 1, col),
+        ];
+        neighbors.into_iter().for_each(|neigh| {
+            visit_neighbor(&mut input, neigh, my_distance, my_height)
+                .map(|c| coords_to_visit.push_back(c));
+        });
     }
 
     input.get(end_row, end_col).unwrap().min_distance
