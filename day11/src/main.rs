@@ -16,11 +16,7 @@ fn part_1(input: &str) -> usize {
 
 fn part_2(input: &str) -> usize {
     let mut monkees = monkee::parse_all(input).expect("Error parsing monkeys");
-    let worry_divisor: isize = monkees
-        .iter()
-        .map(|m| m.test)
-        .reduce(|a, b| num::integer::lcm(a, b))
-        .unwrap();
+    let worry_divisor: isize = monkees.iter().map(|m| m.test).product();
 
     for _ in 0..10000 {
         monkee::do_a_turn(&mut monkees, |f| f % worry_divisor);
