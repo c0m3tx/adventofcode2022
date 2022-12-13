@@ -105,6 +105,10 @@ impl<T> Matrix2D<T> {
     pub fn iter(&self) -> impl Iterator<Item = &T> {
         self.data.iter()
     }
+
+    pub fn into_iter(self) -> impl IntoIterator<Item = T> {
+        self.data.into_iter()
+    }
 }
 
 impl<T: Clone> Clone for Matrix2D<T> {
