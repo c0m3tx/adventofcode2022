@@ -1,117 +1,72 @@
-use pest::{iterators::Pair, Parser};
-use pest_derive::Parser;
+use packet::{Packet, ParseError};
 
-#[derive(Debug)]
-enum ParseError {
-    InvalidDigit(String),
-    NoPacketFound,
-    InvalidPacket,
-}
+mod packet;
 
-#[derive(Parser)]
-#[grammar = "parser.pest"]
-struct PacketParser;
+const INPUT: &str = include_str!("../input.txt");
 
-#[derive(Debug, PartialEq, Eq)]
-enum Packet {
-    List(Vec<Packet>),
-    Value(usize),
-}
+fn part_1(input: &str) -> usize {
+    input
+        .split("\n\n")
+        .enumerate()
+        .filter_map(|(index, packet_pair)| {
+            let (left, right) = packet_pair.split_once("\n").unwrap();
+            let left: Packet = left.try_into().expect("Unable to parse packet");
+            let right: Packet = right.try_into().expect("Unable to parse packet");
 
-impl TryFrom<&str> for Packet {
-    type Error = ParseError;
-
-    fn try_from(line: &str) -> Result<Self, Self::Error> {
-        PacketParser::parse(Rule::list, line)
-            .map_err(|_| ParseError::InvalidPacket)?
-            .next()
-            .ok_or_else(|| ParseError::NoPacketFound)
-            .and_then(|r| r.try_into())
-    }
-}
-
-impl<'a> TryFrom<Pair<'a, Rule>> for Packet {
-    type Error = ParseError;
-    fn try_from(rule: Pair<Rule>) -> Result<Self, Self::Error> {
-        match rule.as_rule() {
-            Rule::number => {
-                let value = rule
-                    .as_str()
-                    .parse::<usize>()
-                    .map_err(|_| ParseError::InvalidDigit(rule.as_str().to_owned()))?;
-                Ok(Packet::Value(value))
+            if left < right {
+                Some(index + 1)
+            } else {
+                None
             }
-            Rule::list => {
-                let mut packets = vec![];
-                for packet in rule.into_inner() {
-                    let inner: Packet = packet.try_into()?;
-                    packets.push(inner);
-                }
-                Ok(Packet::List(packets))
+        })
+        .sum()
+}
+
+fn part_2(input: &str) -> Result<usize, ParseError> {
+    let mut packets: Vec<Packet> = input
+        .split("\n")
+        .filter(|l| !l.is_empty())
+        .map(|l| l.try_into())
+        .collect::<Result<Vec<_>, _>>()?;
+    packets.push(Packet::List(vec![Packet::Value(2)]));
+    packets.push(Packet::List(vec![Packet::Value(6)]));
+
+    packets.sort();
+
+    let value = packets
+        .iter()
+        .enumerate()
+        .filter_map(|(index, packet)| {
+            if packet == &Packet::List(vec![Packet::Value(2)])
+                || packet == &Packet::List(vec![Packet::Value(6)])
+            {
+                Some(index + 1)
+            } else {
+                None
             }
-            _ => unreachable!(),
-        }
-    }
+        })
+        .product::<usize>();
+
+    Ok(value)
 }
 
 fn main() {
-    println!("Hello, world!");
+    println!("Part 1: {}", part_1(INPUT));
+    println!("Part 2: {}", part_2(INPUT).unwrap());
 }
 
 #[cfg(test)]
 mod tests {
-    use super::Packet::*;
     use super::*;
+    const TEST_INPUT: &str = include_str!("../test_input.txt");
 
     #[test]
-    fn parse_simple_list() -> Result<(), ParseError> {
-        let parsed_packet: Packet = "[1,1,3,1,1]".try_into()?;
-        assert_eq!(
-            parsed_packet,
-            List(vec![Value(1), Value(1), Value(3), Value(1), Value(1)])
-        );
-
-        Ok(())
+    fn test_part_1() {
+        assert_eq!(part_1(TEST_INPUT), 13)
     }
 
     #[test]
-    fn parse_nested_lists() -> Result<(), ParseError> {
-        let parsed_packet: Packet = "[[1],[2,3,4]]".try_into()?;
-        assert_eq!(
-            parsed_packet,
-            List(vec![
-                List(vec![Value(1)]),
-                List(vec![Value(2), Value(3), Value(4)])
-            ])
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn parse_mixed_list() -> Result<(), ParseError> {
-        let parsed_packet: Packet = "[[4,4],4,4]".try_into()?;
-        assert_eq!(
-            parsed_packet,
-            List(vec![List(vec![Value(4), Value(4)]), Value(4), Value(4),])
-        );
-
-        Ok(())
-    }
-
-    #[test]
-    fn parse_empty_list() -> Result<(), ParseError> {
-        let parsed_packet: Packet = "[]".try_into()?;
-        assert_eq!(parsed_packet, List(vec![]));
-
-        Ok(())
-    }
-
-    #[test]
-    fn parse_nested_empty_list() -> Result<(), ParseError> {
-        let parsed_packet: Packet = "[[[]]]".try_into()?;
-        assert_eq!(parsed_packet, List(vec![List(vec![List(vec![])])]));
-
-        Ok(())
+    fn test_part_2() {
+        assert_eq!(part_2(TEST_INPUT).unwrap(), 140);
     }
 }
