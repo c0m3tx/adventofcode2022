@@ -22,18 +22,18 @@ fn part_1(input: &str) -> usize {
         .sum()
 }
 
-fn part_2(input: &str) -> Result<usize, ParseError> {
+fn part_2(input: &str) -> usize {
     let mut packets: Vec<Packet> = input
         .split("\n")
         .filter(|l| !l.is_empty())
-        .map(|l| l.try_into())
-        .collect::<Result<Vec<_>, _>>()?;
+        .map(|l| l.try_into().expect("Unable to parse packet"))
+        .collect();
     packets.push(Packet::List(vec![Packet::Value(2)]));
     packets.push(Packet::List(vec![Packet::Value(6)]));
 
     packets.sort();
 
-    let value = packets
+    packets
         .iter()
         .enumerate()
         .filter_map(|(index, packet)| {
@@ -45,14 +45,12 @@ fn part_2(input: &str) -> Result<usize, ParseError> {
                 None
             }
         })
-        .product::<usize>();
-
-    Ok(value)
+        .product::<usize>()
 }
 
 fn main() {
     println!("Part 1: {}", part_1(INPUT));
-    println!("Part 2: {}", part_2(INPUT).unwrap());
+    println!("Part 2: {}", part_2(INPUT));
 }
 
 #[cfg(test)]
@@ -67,6 +65,6 @@ mod tests {
 
     #[test]
     fn test_part_2() {
-        assert_eq!(part_2(TEST_INPUT).unwrap(), 140);
+        assert_eq!(part_2(TEST_INPUT), 140);
     }
 }
