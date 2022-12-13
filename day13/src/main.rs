@@ -1,4 +1,4 @@
-use packet::{Packet, ParseError};
+use packet::Packet;
 
 mod packet;
 
