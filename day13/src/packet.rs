@@ -87,8 +87,7 @@ impl PartialOrd<Packet> for Packet {
                     }
                 }
             }
-            (a @ Packet::Value(_), b @ Packet::List(_)) => a.to_list().partial_cmp(b),
-            (a @ Packet::List(_), b @ Packet::Value(_)) => a.partial_cmp(&b.to_list()),
+            (a, b) => a.to_list().partial_cmp(&b.to_list()),
         }
     }
 }
