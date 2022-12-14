@@ -97,7 +97,7 @@ impl Cave {
 
     fn print_to_file(&self) {
         use common::image::Color;
-        use common::Image;
+        use common::image::PPM as Image;
         let points = self
             .map
             .iter()

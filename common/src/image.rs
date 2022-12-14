@@ -1,7 +1,7 @@
 use std::fs::File;
 use std::io::Write;
 
-pub struct Image {
+pub struct PPM {
     width: usize,
     height: usize,
     data: Vec<u8>,
@@ -35,7 +35,7 @@ impl Color {
     }
 }
 
-impl Image {
+impl PPM {
     pub fn new(width: usize, height: usize) -> Self {
         Self {
             width,
