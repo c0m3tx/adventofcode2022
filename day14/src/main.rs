@@ -14,24 +14,15 @@ impl Point {
     }
 
     fn below(&self) -> Self {
-        Self {
-            x: self.x,
-            y: self.y + 1,
-        }
+        Self::new(self.x, self.y + 1)
     }
 
     fn below_left(&self) -> Self {
-        Self {
-            x: self.x - 1,
-            y: self.y + 1,
-        }
+        Self::new(self.x - 1, self.y + 1)
     }
 
     fn below_right(&self) -> Self {
-        Self {
-            x: self.x + 1,
-            y: self.y + 1,
-        }
+        Self::new(self.x + 1, self.y + 1)
     }
 }
 
@@ -85,23 +76,54 @@ impl Cave {
             if current_position.y > 1000 {
                 return false;
             }
-            let below = current_position.below();
-            let below_left = current_position.below_left();
-            let below_right = current_position.below_right();
 
-            let positions = [below, below_left, below_right];
-            let new_position = positions.into_iter().find(|p| self.get(p).is_none());
+            let new_position = [
+                current_position.below(),
+                current_position.below_left(),
+                current_position.below_right(),
+            ]
+            .into_iter()
+            .find(|p| self.get(p).is_none());
 
             match new_position {
-                Some(position) => {
-                    current_position = position;
-                }
+                Some(position) => current_position = position,
                 None => break,
             }
         }
 
         self.map.insert(current_position, Content::Sand);
         true
+    }
+
+    fn print_to_file(&self) {
+        use common::image::Color;
+        use common::Image;
+        let points = self
+            .map
+            .iter()
+            .filter(|(p, c)| c == &&Content::Sand)
+            .map(|(p, _)| p)
+            .collect::<Vec<_>>();
+        let min_x = points.iter().map(|p| p.x).min().unwrap();
+        let max_x = points.iter().map(|p| p.x).max().unwrap();
+        let min_y = points.iter().map(|p| p.y).min().unwrap();
+        let max_y = points.iter().map(|p| p.y).max().unwrap();
+
+        let width = max_x - min_x;
+        let height = max_y - min_y;
+
+        let mut image = Image::new(width, height);
+        for x in 0..width {
+            for y in 0..height {
+                match self.get(&Point::new(x + min_x, y + min_y)) {
+                    Some(Content::Sand) => image.set(x, y, Color::Yellow),
+                    Some(Content::Rock) => image.set(x, y, Color::Gray),
+                    None => image.set(x, y, Color::Black),
+                }
+            }
+        }
+
+        image.write_to_file("output.ppm").unwrap();
     }
 }
 
@@ -134,7 +156,7 @@ fn main() {
     println!("Part 2: {}", part_2(INPUT));
 }
 
-fn common_cave_part(mut cave: Cave) -> usize {
+fn common_cave_part(cave: &mut Cave) -> usize {
     let mut count = 0;
     while cave.insert_sand() {
         count += 1;
@@ -144,15 +166,19 @@ fn common_cave_part(mut cave: Cave) -> usize {
 }
 
 fn part_1(input: &str) -> usize {
-    let cave = Cave::from(input);
-    common_cave_part(cave)
+    let mut cave = Cave::from(input);
+    common_cave_part(&mut cave)
 }
 
 fn part_2(input: &str) -> usize {
     let mut cave = Cave::from(input);
     cave.add_floor();
 
-    common_cave_part(cave)
+    let result = common_cave_part(&mut cave);
+
+    // cave.print_to_file();
+
+    result
 }
 
 #[cfg(test)]
