@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 use std::fmt::Display;
+use std::ops::Index;
+use std::ops::IndexMut;
 
 pub struct Matrix2D<T> {
     rows: usize,
@@ -108,6 +110,20 @@ impl<T> Matrix2D<T> {
 
     pub fn into_iter(self) -> impl IntoIterator<Item = T> {
         self.data.into_iter()
+    }
+}
+
+impl<T> Index<(usize, usize)> for Matrix2D<T> {
+    type Output = T;
+
+    fn index(&self, index: (usize, usize)) -> &Self::Output {
+        self.get(index.0, index.1).unwrap()
+    }
+}
+
+impl<T> IndexMut<(usize, usize)> for Matrix2D<T> {
+    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+        self.get_mut(index.0, index.1).unwrap()
     }
 }
 
