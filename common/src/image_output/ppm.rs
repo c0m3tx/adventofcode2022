@@ -14,12 +14,12 @@ impl Image {
         Self {
             width,
             height,
-            data: vec![0; (3 * width * height)],
+            data: vec![0; (3 * width * height) as usize],
         }
     }
 
     pub fn set(&mut self, x: u32, y: u32, color: Color) {
-        let offset = (y * self.width * 3) + (x * 3);
+        let offset = ((y * self.width * 3) + (x * 3)) as usize;
         let (r, g, b) = color.to_rgb();
         self.data[offset] = r;
         self.data[offset + 1] = g;

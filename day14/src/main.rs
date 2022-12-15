@@ -1,30 +1,7 @@
+use common::Point;
 use std::collections::HashMap;
 
 const INPUT: &str = include_str!("../input.txt");
-
-#[derive(Hash, PartialEq, Eq, Debug, Clone, Copy)]
-struct Point {
-    x: usize,
-    y: usize,
-}
-
-impl Point {
-    fn new(x: usize, y: usize) -> Self {
-        Self { x, y }
-    }
-
-    fn below(&self) -> Self {
-        Self::new(self.x, self.y + 1)
-    }
-
-    fn below_left(&self) -> Self {
-        Self::new(self.x - 1, self.y + 1)
-    }
-
-    fn below_right(&self) -> Self {
-        Self::new(self.x + 1, self.y + 1)
-    }
-}
 
 struct Cave {
     map: HashMap<Point, Content>,
@@ -95,6 +72,7 @@ impl Cave {
         true
     }
 
+    #[allow(dead_code)]
     fn print_to_file(&self) {
         use common::image_output::color::Color;
         use common::image_output::png::Image;
