@@ -96,12 +96,12 @@ impl Cave {
     }
 
     fn print_to_file(&self) {
-        use common::image::Color;
-        use common::image::PPM as Image;
+        use common::image_output::color::Color;
+        use common::image_output::png::Image;
         let points = self
             .map
             .iter()
-            .filter(|(p, c)| c == &&Content::Sand)
+            .filter(|(_, c)| c == &&Content::Sand)
             .map(|(p, _)| p)
             .collect::<Vec<_>>();
         let min_x = points.iter().map(|p| p.x).min().unwrap();
@@ -112,18 +112,18 @@ impl Cave {
         let width = max_x - min_x;
         let height = max_y - min_y;
 
-        let mut image = Image::new(width, height);
+        let mut image = Image::new(width as u32, height as u32);
         for x in 0..width {
             for y in 0..height {
                 match self.get(&Point::new(x + min_x, y + min_y)) {
-                    Some(Content::Sand) => image.set(x, y, Color::Yellow),
-                    Some(Content::Rock) => image.set(x, y, Color::Gray),
-                    None => image.set(x, y, Color::Black),
+                    Some(Content::Sand) => image.set(x as u32, y as u32, Color::Yellow),
+                    Some(Content::Rock) => image.set(x as u32, y as u32, Color::Gray),
+                    None => image.set(x as u32, y as u32, Color::Black),
                 }
             }
         }
 
-        image.write_to_file("output.ppm").unwrap();
+        image.write_to_file("output.png").unwrap();
     }
 }
 
