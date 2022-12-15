@@ -4,7 +4,7 @@ use std::collections::HashMap;
 const INPUT: &str = include_str!("../input.txt");
 
 struct Cave {
-    map: HashMap<Point, Content>,
+    map: HashMap<Point<isize>, Content>,
 }
 
 impl Cave {
@@ -22,7 +22,7 @@ impl Cave {
         );
     }
 
-    fn add_rock(&mut self, a: Point, b: Point) {
+    fn add_rock(&mut self, a: Point<isize>, b: Point<isize>) {
         if a.x == b.x {
             let min_y = a.y.min(b.y);
             let max_y = a.y.max(b.y);
@@ -39,7 +39,7 @@ impl Cave {
         }
     }
 
-    fn get(&self, point: &Point) -> Option<&Content> {
+    fn get(&self, point: &Point<isize>) -> Option<&Content> {
         self.map.get(&point)
     }
 
@@ -109,7 +109,7 @@ impl From<&str> for Cave {
     fn from(input: &str) -> Self {
         let mut cave = Cave::new();
         input.lines().for_each(|line| {
-            let parts: Vec<Point> = line
+            let parts: Vec<Point<isize>> = line
                 .split(" -> ")
                 .map(|p| p.split_once(",").unwrap())
                 .map(|(a, b)| Point::new(a.parse().unwrap(), b.parse().unwrap()))
