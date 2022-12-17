@@ -1,4 +1,3 @@
-use itertools::Itertools;
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::collections::HashMap;
@@ -12,7 +11,7 @@ lazy_static! {
 
 type DistanceMatrix = Vec<Vec<usize>>;
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 struct Valve {
     name: usize,
     rate: usize,
@@ -101,28 +100,83 @@ impl CaveNetwork {
     }
 
     pub fn most_exhausted_gas(&self) -> usize {
-        let worthy_valves_count = self.valves.iter().filter(|v| v.worthy()).count();
         let distance_matrix = self.calculate_distance_matrix();
 
-        self.valves
+        let worthy_valves: Vec<usize> = self
+            .valves
             .iter()
+            // .map(|v| v.name)
             .filter_map(|v| v.worthy().then_some(v.name))
-            .permutations(worthy_valves_count)
-            .map(|sequence| {
-                let mut current_position = 0;
-                let mut time = 0;
-                let mut exhausted = 0;
+            .collect();
+        self.run_sequence(&distance_matrix, worthy_valves, 0, 0, 0)
+    }
 
-                sequence.iter().for_each(|wv| {
-                    time += distance_matrix[current_position][*wv];
-                    if time < 30 {
-                        time += 1;
-                        current_position = *wv;
-                        exhausted += self.valves[current_position].rate * (30 - time);
-                    }
-                });
+    fn run_sequence(
+        &self,
+        distance_matrix: &DistanceMatrix,
+        sequence: Vec<usize>,
+        position: usize,
+        exhausted: usize,
+        time_passed: usize,
+    ) -> usize {
+        if sequence.is_empty() || time_passed >= 30 {
+            // panic!("but would return {}", exhausted);
+            return exhausted;
+        };
 
-                exhausted
+        // #[feature(verbose_log)]
+        // println!();
+        // #[feature(verbose_log)]
+        // println!("Sequence is: {sequence:?}");
+        // #[feature(verbose_log)]
+        // println!("Position is {position}");
+        // #[feature(verbose_log)]
+        // println!("Time passed is {time_passed}");
+        // #[feature(verbose_log)]
+        // println!("Exhausted is {exhausted}");
+
+        let current_valve = &self.valves[position];
+
+        sequence
+            .iter()
+            .enumerate()
+            .map(|(index, &next_neigh)| {
+                let distance = distance_matrix[position][next_neigh];
+                // #[feature(verbose_log)]
+                // println!("  Distance {position} -> {next_neigh} = {distance}");
+                let mut new_sequence: Vec<usize> = sequence.clone();
+                new_sequence.remove(index);
+                if time_passed + distance > 30 {
+                    // #[feature(verbose_log)]
+                    // println!("    Going to {} would bring the time passed to {}, so I return {}", next_neigh, time_passed + distance, exhausted);
+                    exhausted
+                } else if current_valve.worthy() {
+                    // #[feature(verbose_log)]
+                    // println!("    Valve is worthy, and I want to open it");
+                    let exhausted_by_me = current_valve.rate * (29 - time_passed);
+                    // #[feature(verbose_log)]
+                    // println!(
+                    //     "    Since the valve rate is {}, it will exhaust {exhausted_by_me} over the next {} minutes for a total of {}",
+                    //     current_valve.rate,
+                    //     30 - time_passed,
+                    //     exhausted + exhausted_by_me
+                    // );
+                    self.run_sequence(
+                        distance_matrix,
+                        new_sequence,
+                        next_neigh,
+                        exhausted + exhausted_by_me,
+                        time_passed + distance + 1,
+                    )
+                } else {
+                    self.run_sequence(
+                        distance_matrix,
+                        new_sequence,
+                        next_neigh,
+                        exhausted,
+                        time_passed + distance,
+                    )
+                }
             })
             .max()
             .unwrap()
@@ -156,5 +210,29 @@ mod tests {
         distance_matrix
             .into_iter()
             .for_each(|row| println!("{:?}", row))
+    }
+
+    #[test]
+    fn test_most_exhausted_gas() {
+        let cave_network = CaveNetwork::from(TEST_INPUT);
+        assert_eq!(cave_network.most_exhausted_gas(), 1651)
+    }
+
+    #[test]
+    fn test_run_sequence() {
+        let cave_network = CaveNetwork::from(TEST_INPUT);
+        let distance_matrix = cave_network.calculate_distance_matrix();
+        // DD, BB, JJ, HH, EE, CC e finisce il tempo per fare altro
+        // assert_eq!(
+        //     cave_network.run_sequence(&distance_matrix, vec![3, 1, 9, 7, 4, 2], 0, 0, 0),
+        //     1651
+        // );
+
+        // dbg!(&cave_network.valves);
+
+        assert_eq!(
+            cave_network.run_sequence(&distance_matrix, vec![1, 2, 3, 4, 7, 9], 0, 0, 0),
+            1651
+        );
     }
 }
