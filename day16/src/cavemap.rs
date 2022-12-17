@@ -106,7 +106,7 @@ impl CaveNetwork {
             .valves
             .iter()
             // .map(|v| v.name)
-            .filter_map(|v| (v.name == 0 || v.worthy()).then_some(v.name))
+            .filter_map(|v| v.worthy().then_some(v.name))
             .collect();
         self.run_sequence(&distance_matrix, worthy_valves, 0, 0, 0)
     }
@@ -119,11 +119,17 @@ impl CaveNetwork {
         exhausted: usize,
         time_passed: usize,
     ) -> usize {
-        if sequence.is_empty() || time_passed > 30 {
+        if time_passed > 30 {
             return exhausted;
         };
 
         let current_valve = &self.valves[position];
+        if sequence.is_empty() {
+            if current_valve.worthy() && time_passed < 30 {
+                let exhausted_by_me = current_valve.rate * (29 - time_passed);
+                return exhausted + exhausted_by_me;
+            }
+        }
 
         sequence
             .iter()
@@ -166,7 +172,6 @@ impl CaveNetwork {
 #[cfg(test)]
 mod tests {
     use super::*;
-    const INPUT: &str = include_str!("../input.txt");
 
     const TEST_INPUT: &str = include_str!("../test_input.txt");
 
@@ -202,13 +207,6 @@ mod tests {
     fn test_run_sequence() {
         let cave_network = CaveNetwork::from(TEST_INPUT);
         let distance_matrix = cave_network.calculate_distance_matrix();
-        // DD, BB, JJ, HH, EE, CC e finisce il tempo per fare altro
-        // assert_eq!(
-        //     cave_network.run_sequence(&distance_matrix, vec![3, 1, 9, 7, 4, 2], 0, 0, 0),
-        //     1651
-        // );
-
-        // dbg!(&cave_network.valves);
 
         assert_eq!(
             cave_network.run_sequence(&distance_matrix, vec![1, 2, 3, 4, 7, 9], 0, 0, 0),
