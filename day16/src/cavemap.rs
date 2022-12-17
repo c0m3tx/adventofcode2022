@@ -106,7 +106,7 @@ impl CaveNetwork {
             .valves
             .iter()
             // .map(|v| v.name)
-            .filter_map(|v| v.worthy().then_some(v.name))
+            .filter_map(|v| (v.name == 0 || v.worthy()).then_some(v.name))
             .collect();
         self.run_sequence(&distance_matrix, worthy_valves, 0, 0, 0)
     }
@@ -119,21 +119,9 @@ impl CaveNetwork {
         exhausted: usize,
         time_passed: usize,
     ) -> usize {
-        if sequence.is_empty() || time_passed >= 30 {
-            // panic!("but would return {}", exhausted);
+        if sequence.is_empty() || time_passed > 30 {
             return exhausted;
         };
-
-        // #[feature(verbose_log)]
-        // println!();
-        // #[feature(verbose_log)]
-        // println!("Sequence is: {sequence:?}");
-        // #[feature(verbose_log)]
-        // println!("Position is {position}");
-        // #[feature(verbose_log)]
-        // println!("Time passed is {time_passed}");
-        // #[feature(verbose_log)]
-        // println!("Exhausted is {exhausted}");
 
         let current_valve = &self.valves[position];
 
@@ -142,25 +130,17 @@ impl CaveNetwork {
             .enumerate()
             .map(|(index, &next_neigh)| {
                 let distance = distance_matrix[position][next_neigh];
-                // #[feature(verbose_log)]
-                // println!("  Distance {position} -> {next_neigh} = {distance}");
                 let mut new_sequence: Vec<usize> = sequence.clone();
                 new_sequence.remove(index);
                 if time_passed + distance > 30 {
-                    // #[feature(verbose_log)]
-                    // println!("    Going to {} would bring the time passed to {}, so I return {}", next_neigh, time_passed + distance, exhausted);
-                    exhausted
+                    if current_valve.worthy() && time_passed < 30 {
+                        let exhausted_by_me = current_valve.rate * (29 - time_passed);
+                        exhausted + exhausted_by_me
+                    } else {
+                        exhausted
+                    }
                 } else if current_valve.worthy() {
-                    // #[feature(verbose_log)]
-                    // println!("    Valve is worthy, and I want to open it");
                     let exhausted_by_me = current_valve.rate * (29 - time_passed);
-                    // #[feature(verbose_log)]
-                    // println!(
-                    //     "    Since the valve rate is {}, it will exhaust {exhausted_by_me} over the next {} minutes for a total of {}",
-                    //     current_valve.rate,
-                    //     30 - time_passed,
-                    //     exhausted + exhausted_by_me
-                    // );
                     self.run_sequence(
                         distance_matrix,
                         new_sequence,
